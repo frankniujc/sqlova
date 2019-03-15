@@ -103,8 +103,10 @@ def construct_hyper_param(parser):
     #args.toy_model = not torch.cuda.is_available()
     args.toy_model = False
     args.toy_size = 12
-
-    args.device = torch.device(args.device)
+    if args.device.isalpha():
+        args.device = torch.device('cuda:'+args.device)
+    else:
+        args.device = torch.device(args.device)
 
     return args
 
@@ -129,7 +131,7 @@ def get_bert(BERT_PT_PATH, bert_type, do_lower_case, no_pretraining):
     else:
         model_bert.load_state_dict(torch.load(init_checkpoint, map_location='cpu'))
         print("Load pre-trained parameters.")
-    model_bert.to(device)
+    model_bert.to(args.device)
 
     return model_bert, tokenizer, bert_config
 
@@ -172,7 +174,7 @@ def get_models(args, BERT_PT_PATH, trained=False, path_model_bert=None, path_mod
     print(f"Seq-to-SQL: dropout rate = {args.dr}")
     print(f"Seq-to-SQL: learning rate = {args.lr}")
     model = Seq2SQL_v1(args.iS, args.hS, args.lS, args.dr, n_cond_ops, n_agg_ops)
-    model = model.to(device)
+    model = model.to(args.device)
 
     if trained:
         assert path_model_bert != None
@@ -183,7 +185,7 @@ def get_models(args, BERT_PT_PATH, trained=False, path_model_bert=None, path_mod
         else:
             res = torch.load(path_model_bert, map_location='cpu')
         model_bert.load_state_dict(res['model_bert'])
-        model_bert.to(device)
+        model_bert.to(args.device)
 
         if torch.cuda_is_available():
             res = torch.load(path_model)
