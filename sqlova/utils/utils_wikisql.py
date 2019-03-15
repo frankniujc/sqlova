@@ -20,8 +20,8 @@ from .utils import json_default_type_checker
 from .wikisql_formatter import get_squad_style_ans
 
 
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# (Frank) This is very ugly
+default_device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
 # Load data -----------------------------------------------------------------------------------------------
 def load_wikisql(path_wikisql, toy_model, toy_size, bert=False, no_w2i=False, no_hs_tok=False, aug=False):
@@ -169,7 +169,7 @@ def word_to_idx1(words1, w2i, no_BE):
     return w2i_l1, l1
 
 
-def words_to_idx(words, w2i, no_BE=False):
+def words_to_idx(words, w2i, no_BE=False, device=default_device):
     """
     Input: [ ['I', 'am', 'hero'],
              ['You', 'are 'geneus'] ]
@@ -219,7 +219,7 @@ def hs_to_idx(hs_t, w2i, no_BE=False):
 
 # Encoding ---------------------------------------------------------------------
 
-def encode(lstm, wemb_l, l, return_hidden=False, hc0=None, last_only=False):
+def encode(lstm, wemb_l, l, return_hidden=False, hc0=None, last_only=False, device=default_device):
     """ [batch_size, max token length, dim_emb]
     """
     bS, mL, eS = wemb_l.shape
@@ -267,7 +267,7 @@ def encode(lstm, wemb_l, l, return_hidden=False, hc0=None, last_only=False):
         return wenc
 
 
-def encode_hpu(lstm, wemb_hpu, l_hpu, l_hs):
+def encode_hpu(lstm, wemb_hpu, l_hpu, l_hs, device=default_device):
     wenc_hpu, hout, cout = encode( lstm,
                                    wemb_hpu,
                                    l_hpu,
@@ -526,7 +526,7 @@ def gen_l_hpu(i_hds):
 
     return l_hpu
 
-def get_bert_output_s2s(model_bert, tokenizer, nlu_t, hds, sql_vocab, max_seq_length):
+def get_bert_output_s2s(model_bert, tokenizer, nlu_t, hds, sql_vocab, max_seq_length, device=default_device):
     """
     s2s version. Treat SQL-tokens as pseudo-headers
     sql_vocab = ("sql select", "sql where", "sql and", "sql equal", "sql greater than", "sql less than")
@@ -650,7 +650,7 @@ def get_bert_output_s2s(model_bert, tokenizer, nlu_t, hds, sql_vocab, max_seq_le
            nlu_tt, t_to_tt_idx, tt_to_t_idx
 
 
-def get_bert_output(model_bert, tokenizer, nlu_t, hds, max_seq_length):
+def get_bert_output(model_bert, tokenizer, nlu_t, hds, max_seq_length, device=default_device):
     """
     Here, input is toknized further by WordPiece (WP) tokenizer and fed into BERT.
 
@@ -758,7 +758,7 @@ def get_bert_output(model_bert, tokenizer, nlu_t, hds, max_seq_length):
 
 
 
-def get_wemb_n(i_nlu, l_n, hS, num_hidden_layers, all_encoder_layer, num_out_layers_n):
+def get_wemb_n(i_nlu, l_n, hS, num_hidden_layers, all_encoder_layer, num_out_layers_n, device=default_device):
     """
     Get the representation of each tokens.
     """
@@ -779,7 +779,7 @@ def get_wemb_n(i_nlu, l_n, hS, num_hidden_layers, all_encoder_layer, num_out_lay
     #
 
 
-def get_wemb_h(i_hds, l_hpu, l_hs, hS, num_hidden_layers, all_encoder_layer, num_out_layers_h):
+def get_wemb_h(i_hds, l_hpu, l_hs, hS, num_hidden_layers, all_encoder_layer, num_out_layers_h, device=default_device):
     """
     As if
     [ [table-1-col-1-tok1, t1-c1-t2, ...],
@@ -832,7 +832,7 @@ def get_wemb_bert(bert_config, model_bert, tokenizer, nlu_t, hds, max_seq_length
            nlu_tt, t_to_tt_idx, tt_to_t_idx
 
 
-def gen_pnt_n(g_wvi, mL_w, mL_nt):
+def gen_pnt_n(g_wvi, mL_w, mL_nt, device=default_device):
     """
     Generate one-hot idx indicating vectors with their lenghts.
 
@@ -2156,7 +2156,7 @@ def get_cnt_lx_list_s2s(g_pnt_idxs, pr_pnt_idxs):
     return cnt_list
 
 
-def get_wemb_h_FT_Scalar_1(i_hds, l_hs, hS, all_encoder_layer, col_pool_type='start_tok'):
+def get_wemb_h_FT_Scalar_1(i_hds, l_hs, hS, all_encoder_layer, col_pool_type='start_tok', device=default_device):
     """
     As if
     [ [table-1-col-1-tok1, t1-c1-t2, ...],
