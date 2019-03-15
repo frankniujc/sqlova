@@ -29,14 +29,44 @@ class Seq2SQL_v1(nn.Module):
         self.n_cond_ops = n_cond_ops
         self.n_agg_ops = n_agg_ops
 
+        # different decoders:
+        # They actually named their variables backwards, WCP actually means p_{wc}
+        # (Korean language convention?)
+
+        # Naming convention is also a little different
+        # Our way:
+        #   SELECT $AGG $COLUMN
+        #   WHERE $COLUMN $OP $VALUE
+        #   AND $COLUMN $OP $VALUE
+        # Theirs:
+        # SELECT <select-aggregation> <select-column>
+        # WHERE <where-column> <where-operator> <where-value>
+        # AND <where-column> <where-operator> <where-value>  *repeat (where-number - 1) times
+
+
+        # where-column
         self.wcp = WCP(iS, hS, lS, dr)
+        # select-column
         self.scp = SCP(iS, hS, lS, dr)
+        # select-aggregation
         self.sap = SAP(iS, hS, lS, dr, n_agg_ops, old=old)
+        # where-number
         self.wnp = WNP(iS, hS, lS, dr)
+        # where-column
         self.wcp = WCP(iS, hS, lS, dr)
+        # where-operator
         self.wop = WOP(iS, hS, lS, dr, n_cond_ops)
+        # where-value
         self.wvp = WVP_se(iS, hS, lS, dr, n_cond_ops, old=old) # start-end-search-discriminative model
 
+        # I think these might be more intuitive
+        self.p_wc = self.wcp
+        self.p_sc = self.scp
+        self.p_sa = self.sap
+        self.p_wn = self.wnp
+        self.p_wc = self.wcp
+        self.p_wo = self.wop
+        self.p_wv = self.wvp
 
     def forward(self, wemb_n, l_n, wemb_hpu, l_hpu, l_hs,
                 g_sc=None, g_sa=None, g_wn=None, g_wc=None, g_wo=None, g_wvi=None,

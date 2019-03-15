@@ -20,7 +20,7 @@ from sqlova.utils.utils_wikisql import *
 from sqlova.model.nl2sql.wikisql_models import *
 from sqlnet.dbengine import DBEngine
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def construct_hyper_param(parser):
     parser.add_argument('--tepoch', default=200, type=int)
@@ -72,6 +72,11 @@ def construct_hyper_param(parser):
                         default=4,
                         help="The size of beam for smart decoding")
 
+    # 1.5 Newly added parameters
+    parser.add_argument('--device',
+                        default='0',
+                        help="Pytorch device")
+
     args = parser.parse_args()
 
     map_bert_type_abb = {'uS': 'uncased_L-12_H-768_A-12',
@@ -98,6 +103,8 @@ def construct_hyper_param(parser):
     #args.toy_model = not torch.cuda.is_available()
     args.toy_model = False
     args.toy_size = 12
+
+    args.device = torch.device(args.device)
 
     return args
 
@@ -550,7 +557,7 @@ if __name__ == '__main__':
     args = construct_hyper_param(parser)
 
     ## 2. Paths
-    path_h = '/home/wonseok'
+    path_h = './'
     path_wikisql = os.path.join(path_h, 'data', 'wikisql_tok')
     BERT_PT_PATH = path_wikisql
 
