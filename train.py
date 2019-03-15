@@ -103,7 +103,7 @@ def construct_hyper_param(parser):
     #args.toy_model = not torch.cuda.is_available()
     args.toy_model = False
     args.toy_size = 12
-    if args.device.isalpha():
+    if args.device.isdigit():
         args.device = torch.device('cuda:'+args.device)
     else:
         args.device = torch.device(args.device)
